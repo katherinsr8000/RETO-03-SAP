@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsx src/server.ts",
+    "check": "tsc --noEmit",
+    "demo": "tsx demo.ts",
+    "demo:integracion": "tsx demo-integracion.ts"
   },
   "keywords": [],
   "author": "",
