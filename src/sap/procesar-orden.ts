@@ -23,20 +23,26 @@ export type ResultadoProcesamiento =
 
 export function procesarOrden(
   validacion: ResultadoValidacion,
-  datos: DatosOrdenSAP
+  datos: DatosOrdenSAP,
+  confirmacionHumana = false
 ): ResultadoProcesamiento {
-  if (
-    !validacion.apta ||
-    validacion.bloqueos.length > 0 ||
-    validacion.confirmaciones.length > 0
-  ) {
+
+  const tieneBloqueos = validacion.bloqueos.length > 0;
+
+  const confirmacionesPendientes =
+    validacion.confirmaciones.length > 0 &&
+    !confirmacionHumana;
+
+  if (tieneBloqueos || confirmacionesPendientes) {
     return {
       creada: false,
       orden: null,
       mensaje:
         "No se puede crear la orden. Existen bloqueos o confirmaciones pendientes.",
       bloqueos: validacion.bloqueos,
-      confirmaciones: validacion.confirmaciones
+      confirmaciones: confirmacionHumana
+        ? []
+        : validacion.confirmaciones
     };
   }
 
