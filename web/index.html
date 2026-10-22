@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agente SAP</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f5f9;
+      margin: 0;
+      padding: 30px;
+    }
+    main {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px #0001;
+    }
+    header {
+      background: #193b73;
+      color: white;
+      padding: 22px;
+    }
+    h1 { margin: 0 0 8px; }
+    #mensajes {
+      height: 420px;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .mensaje {
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .usuario {
+      background: #dceaff;
+      margin-left: 15%;
+    }
+    .agente {
+      background: #f0f1f3;
+      margin-right: 15%;
+    }
+    form {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+    }
+    input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background: #193b73;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Agente de Compras SAP</h1>
+      <div>Validación y creación simulada de órdenes</div>
+    </header>
+
+    <div id="mensajes">
+      <div class="mensaje agente">
+        ¡Hola! Puedo revisar las solicitudes
+        sol-001 a sol-006.
+        ¿Cuál deseas consultar?
+      </div>
+    </div>
+
+    <form id="formulario">
+      <input id="entrada"
+        placeholder="Ej: Revisa la solicitud sol-001"
+        required>
+      <button id="enviar">Enviar</button>
+    </form>
+  </main>
+
+  <script>
+    const historial = [];
+    const mensajes = document.getElementById("mensajes");
+    const entrada = document.getElementById("entrada");
+    const boton = document.getElementById("enviar");
+
+    function agregar(texto, clase) {
+      const div = document.createElement("div");
+      div.className = "mensaje " + clase;
+      div.textContent = texto;
+      mensajes.appendChild(div);
+      mensajes.scrollTop = mensajes.scrollHeight;
+    }
+
+    document.getElementById("formulario")
+      .addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+
+        const mensaje = entrada.value.trim();
+        if (!mensaje) return;
+
+        agregar(mensaje, "usuario");
+        entrada.value = "";
+        boton.disabled = true;
+
+        try {
+          const respuesta = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              mensaje,
+              historial
+            })
+          });
+
+          const data = await respuesta.json();
+
+          if (!respuesta.ok) {
+            throw new Error(
+              data.error || "Error del servidor"
+            );
+          }
+
+          agregar(data.respuesta, "agente");
+
+          historial.push(
+            { role: "user", content: mensaje },
+            {
+              role: "assistant",
+              content: data.respuesta
+            }
+          );
+        } catch (error) {
+          agregar("Error: " + error.message, "agente");
+        } finally {
+          boton.disabled = false;
+          entrada.focus();
+        }
+      });
+  </script>
+</body>
+</html>
